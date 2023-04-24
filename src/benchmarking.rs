@@ -1,3 +1,17 @@
+//  Copyright 2022 Open Rollup Lab
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
 #![cfg(feature = "runtime-benchmarks")]
 
 use super::*;
@@ -12,10 +26,12 @@ const PROGRAM_HASH: [u8; 32] = *b"0000000000000001ad428e4906aE43D8";
 const STATE_ROOT_1: [u8; 32] = *b"00000000000000000000000000000000";
 const STATE_ROOT_2: [u8; 32] = *b"0059b62bc53ad4150a3e712d6273956f";
 
+/// Check last event.
 fn assert_last_event<T: Config<I>, I: 'static>(generic_event: <T as Config<I>>::RuntimeEvent) {
 	frame_system::Pallet::<T>::assert_last_event(generic_event.into());
 }
 
+/// Register one zkapp use default program hash.
 fn register_default_zkapp<T: Config<I>, I: 'static>() -> (T::AccountId, AccountIdLookupOf<T>)
 where
 	CurrencyBalanceOf<T, I>: From<u64>,
@@ -46,6 +62,7 @@ where
 	(caller, caller_lookup)
 }
 
+/// Register one zkapp use another program hash.
 fn register_other_zkapp<T: Config<I>, I: 'static>() -> (T::AccountId, AccountIdLookupOf<T>) {
 	let caller: T::AccountId = whitelisted_caller();
 	let caller_lookup = T::Lookup::unlookup(caller.clone());
@@ -62,6 +79,7 @@ fn register_other_zkapp<T: Config<I>, I: 'static>() -> (T::AccountId, AccountIdL
 	(caller, caller_lookup)
 }
 
+/// Add assets support for zkapp of `PROGRAM_HASH` program hash
 fn add_other_assets_support<T: Config<I>, I: 'static>() -> (T::AccountId, AccountIdLookupOf<T>) {
 	let caller: T::AccountId = whitelisted_caller();
 	let caller_lookup = T::Lookup::unlookup(caller.clone());
@@ -86,6 +104,7 @@ fn add_other_assets_support<T: Config<I>, I: 'static>() -> (T::AccountId, Accoun
 	(caller, caller_lookup)
 }
 
+/// Add assets support for zkapp of default program hash
 fn add_default_assets_support<T: Config<I>, I: 'static>() -> (T::AccountId, AccountIdLookupOf<T>) {
 	let caller: T::AccountId = whitelisted_caller();
 	let caller_lookup = T::Lookup::unlookup(caller.clone());
@@ -199,32 +218,40 @@ benchmarks_instance_pallet! {
 		let (caller, caller_lookup) = register_default_zkapp::<T, I>();
 		add_default_assets_support::<T, I>();
 
+		// Generate state roots and users.
 		let old_state_root = T::Helper::state_root(STATE_ROOT_1);
 		let new_state_root = T::Helper::state_root(STATE_ROOT_2);
 		let zk_proof = vec![1, 2, 3];
-
 		let user_1: T::AccountId = account("user_1", 0, SEED);
 		let user_2: T::AccountId = account("user_2", 0, SEED);
 		let user_1_signed = SystemOrigin::Signed(user_1.clone());
 		let user_2_signed = SystemOrigin::Signed(user_2.clone());
 
+		// Add currency for users.
 		T::Currency::make_free_balance_be(&user_1, 8888888888u64.into());
 		T::Currency::make_free_balance_be(&user_2, 8888888888u64.into());
 
+		// Add fungible asset for users.
 		<<T as Config<I>>::Fungibles as fungibles::Mutate<T::AccountId>>::mint_into(T::Helper::asset(11), &user_1, 10000u32.into()).unwrap();
+
+		// Add nonfungible asset for users.
 		<<T as Config<I>>::Nonfungibles>::force_mint(&T::Helper::collection(11), &T::Helper::item(11), &user_2).unwrap();
 
+		// Currency `AssetValue`.
 		let asset_value_1 = AssetValueOf::<T, I>::Currency(1000u64.into());
 		OpenRollup::<T, I>::deposit(user_1_signed.clone().into(), Default::default(), asset_value_1.clone()).unwrap();
 
+		// Fungible `AssetValue`.
 		let asset_value_2 = AssetValueOf::<T, I>::Fungible(T::Helper::asset(11), 10u32.into());
 		OpenRollup::<T, I>::deposit(user_1_signed.clone().into(), Default::default(), asset_value_2.clone()).unwrap();
 
+		// NonFungible `AssetValue`.
 		let mut items = BoundedVec::default();
 		items.try_push(T::Helper::item(11)).unwrap();
 		let asset_value_3 = AssetValueOf::<T, I>::Nonfungible(T::Helper::collection(11), items);
 		OpenRollup::<T, I>::deposit(user_2_signed.clone().into(), Default::default(), asset_value_3.clone()).unwrap();
 
+		// Operations included in the batch submission.
 		let operations = vec![
 			Operation::Deposit(user_1.clone(), asset_value_1.clone()),
 			Operation::Deposit(user_1.clone(), asset_value_2.clone()),
@@ -236,15 +263,18 @@ benchmarks_instance_pallet! {
 
 	}: _(SystemOrigin::Signed(caller.clone()), Default::default(), old_state_root, new_state_root, 3, operations.clone(), zk_proof)
 	verify {
+		// Check SubmitBatch event.
 		assert_last_event::<T, I>(Event::SubmitBatch(Default::default(), old_state_root, new_state_root, operations).into());
 
 		let zkapp = Zkapps::<T, I>::try_get::<T::ProgramHash>(Default::default()).unwrap();
+		// Check `l1_operations`data.
 		assert_eq!(zkapp.l1_operations.len(), 0);
+		// Check `new_state_root` has saved.
 		assert_eq!(zkapp.state_root, new_state_root);
 
+		// Check users's assets is correct.
 		let account_1 = ZkappsAccounts::<T, I>::try_get::<T::ProgramHash, T::AccountId>(Default::default(), user_1.clone()).unwrap();
 		assert_eq!(account_1.assets.last().unwrap(), &asset_value_2);
-
 		let account_2 = ZkappsAccounts::<T, I>::try_get::<T::ProgramHash, T::AccountId>(Default::default(), user_2.clone()).unwrap();
 		assert_eq!(account_2.assets.last().unwrap(), &asset_value_1);
 	}

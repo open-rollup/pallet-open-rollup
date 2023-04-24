@@ -1,3 +1,17 @@
+//  Copyright 2022 Open Rollup Lab
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
 //! Test environment for Open Rollup pallet.
 
 use super::*;
@@ -15,6 +29,7 @@ use sp_runtime::{
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
 
+// A mock runtime for testing.
 construct_runtime!(
 	pub enum Test where
 		Block = Block,
@@ -29,6 +44,7 @@ construct_runtime!(
 	}
 );
 
+/// Add frame_system.
 impl frame_system::Config for Test {
 	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockWeights = ();
@@ -56,6 +72,7 @@ impl frame_system::Config for Test {
 	type MaxConsumers = ConstU32<2>;
 }
 
+// Add balance pallet for currency asset.
 impl pallet_balances::Config for Test {
 	type Balance = u64;
 	type DustRemoval = ();
@@ -68,6 +85,7 @@ impl pallet_balances::Config for Test {
 	type ReserveIdentifier = [u8; 8];
 }
 
+/// Add assets pallet for fungible asset.
 impl pallet_assets::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type Balance = u64;
@@ -85,6 +103,7 @@ impl pallet_assets::Config for Test {
 	type Extra = ();
 }
 
+/// Add uniques pallet for nonfungible asset.
 impl pallet_uniques::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type CollectionId = u32;
@@ -108,6 +127,7 @@ parameter_types! {
 	pub const OpenRollupPalletId: PalletId = PalletId(*b"openroll");
 }
 
+/// Add open rollup pallet.
 impl Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type ProgramHash = H256;
@@ -117,7 +137,6 @@ impl Config for Test {
 	type Fungibles = Assets;
 	type Nonfungibles = Uniques;
 	type WeightInfo = ();
-	type MaxStorageKeyLen = ConstU32<128>;
 	type AssetsLimit = ConstU32<10>;
 	type AssetsItemLimit = ConstU32<11>;
 	type L1OperationLimit = ConstU32<300>;
@@ -129,6 +148,7 @@ impl Config for Test {
 pub(crate) fn new_test_ext() -> sp_io::TestExternalities {
 	let mut storage = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 
+	// Add one default asset for assets pallet.
 	let config: pallet_assets::GenesisConfig<Test> = pallet_assets::GenesisConfig {
 		assets: vec![
 			// id, owner, is_sufficient, min_balance
@@ -141,13 +161,15 @@ pub(crate) fn new_test_ext() -> sp_io::TestExternalities {
 		accounts: vec![
 			// id, account_id, balance
 			(1, 1, 100),
+			(1, 3, 100),
 		],
 	};
 
 	config.assimilate_storage(&mut storage).unwrap();
 
+	// Add two default accounts for balance pallet.
 	let config: pallet_balances::GenesisConfig<Test> =
-		pallet_balances::GenesisConfig { balances: vec![(1, 10000), (2, 10000)] };
+		pallet_balances::GenesisConfig { balances: vec![(1, 10000), (2, 10000), (3, 10000)] };
 
 	config.assimilate_storage(&mut storage).unwrap();
 
@@ -155,9 +177,12 @@ pub(crate) fn new_test_ext() -> sp_io::TestExternalities {
 	// Clear thread local vars for https://github.com/paritytech/substrate/issues/10479.
 	ext.execute_with(|| System::set_block_number(1));
 	ext.execute_with(|| {
+		// Create one nonfungible collection for test.
 		<Test as Config>::Nonfungibles::create_collection(&1, &1, &1).unwrap();
 		<Test as Config>::Nonfungibles::mint_into(&1, &1, &1).unwrap();
 		<Test as Config>::Nonfungibles::mint_into(&1, &2, &1).unwrap();
+		<Test as Config>::Nonfungibles::mint_into(&1, &3, &3).unwrap();
+		<Test as Config>::Nonfungibles::mint_into(&1, &4, &3).unwrap();
 	});
 	ext
 }

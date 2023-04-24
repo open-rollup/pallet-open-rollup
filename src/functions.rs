@@ -1,13 +1,29 @@
+//  Copyright 2022 Open Rollup Lab
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
 //! Functions for the Open Rollup pallet.
 
 use super::*;
 
+/// Contains all pallet-facing functions.
 impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	/// Returns the account of the pallet.
 	pub fn account_id() -> T::AccountId {
 		T::PalletId::get().into_account_truncating()
 	}
 
+	/// Transfer asset from user to pallet account.
 	pub fn user_deposit(user: T::AccountId, asset_value: AssetValueOf<T, I>) -> DispatchResult {
 		let account_id = Self::account_id();
 
@@ -30,6 +46,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		Ok(())
 	}
 
+	/// Transfer asset from pallet account to user.
 	pub fn user_withdraw(user: T::AccountId, asset_value: AssetValueOf<T, I>) -> DispatchResult {
 		let account_id = Self::account_id();
 
@@ -52,6 +69,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		Ok(())
 	}
 
+	/// Add user's asset balance in a zkapp.
 	pub fn add_user_asset(
 		account: &mut AccountOf<T, I>,
 		asset_value: &AssetValueOf<T, I>,
@@ -93,6 +111,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		Ok(())
 	}
 
+	/// Reduce user's asset balance in a zkapp.
 	pub fn reduce_user_asset(
 		account: &mut AccountOf<T, I>,
 		asset_value: &AssetValueOf<T, I>,
@@ -142,6 +161,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		Ok(())
 	}
 
+	/// Check whether user has enough asset for withdraw or move.
 	pub fn check_has_enough_asset(
 		account: &AccountOf<T, I>,
 		asset_value: &AssetValueOf<T, I>,
@@ -183,6 +203,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		false
 	}
 
+	/// Add user's asset balance in a zkapp.
 	pub fn add_zkapp_user_asset(
 		program_hash: ProgramHashOf<T, I>,
 		user: AccountIdOf<T>,

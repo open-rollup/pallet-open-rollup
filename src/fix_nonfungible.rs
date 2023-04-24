@@ -1,3 +1,24 @@
+//  Copyright 2022 Open Rollup Lab
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+//! Add constraints traits for type ItemId and CollectionId for nonfungibles' Transfer trait.
+//! No the constraints traits, it cannot be saved to pallet's storage.
+//! The solution is ugly, it must include uniques pallet as dependency.
+//! Maybe add the traits constraints for the ItemId and CollectionId types of the Inspect trait is
+//! better, or seek other solution.
+//! <https://github.com/paritytech/substrate/blob/polkadot-v0.9.31/frame/support/src/traits/tokens/nonfungibles.rs#L36>
+
 use super::*;
 use pallet_uniques::{Config, Pallet};
 
@@ -24,6 +45,7 @@ pub trait Transfer<AccountId> {
 		destination: &AccountId,
 	) -> DispatchResult;
 
+	/// Create one collection.
 	fn force_create(
 		collection: &Self::CollectionId,
 		who: &AccountId,
