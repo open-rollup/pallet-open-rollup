@@ -117,10 +117,15 @@ impl<CurrencyBalance, AssetId, FungibleBalance, CollectionId, ItemId>
 /// L2 Txs can trigger all operations.
 #[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 pub enum Operation<AccountId, AssetValue, ProgramHash> {
+	/// Deposit, [account_id, asset_value]
 	Deposit(AccountId, AssetValue),
+	/// Withdraw, [account_id, asset_value]
 	Withdraw(AccountId, AssetValue),
+	/// Move asset, [account_id, from_program_hash, asset_value]
 	Move(AccountId, ProgramHash, AssetValue),
+	/// Transfer, [from_account_id, to_account_id, asset_value]
 	Transfer(AccountId, AccountId, AssetValue),
+	/// Swap, [account_id_1, asset_value_1, account_id_2, asset_value_2]
 	Swap(AccountId, AssetValue, AccountId, AssetValue),
 }
 

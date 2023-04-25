@@ -117,6 +117,102 @@ fn duplicate_add_asset_support() {
 	});
 }
 
+/// Called by not-owner
+#[test]
+fn called_by_not_owner() {
+	new_test_ext().execute_with(|| {
+		let (program_hash, _owner, user) = setup_app(PROGRAM_HASH_64);
+		let new_submitter = 5;
+
+		assert_noop!(
+			OpenRollup::add_asset_support(user.clone(), program_hash, Asset::Fungible(ASSET_ID)),
+			Error::<Test>::NotOwner
+		);
+		assert_noop!(
+			OpenRollup::change_submitter(user.clone(), program_hash, new_submitter),
+			Error::<Test>::NotOwner
+		);
+		assert_noop!(OpenRollup::set_inactive(user.clone(), program_hash), Error::<Test>::NotOwner);
+	});
+}
+
+/// Called by not-submitter
+#[test]
+fn called_by_not_submitter() {
+	new_test_ext().execute_with(|| {
+		let (program_hash, _owner, user) = setup_app(PROGRAM_HASH_64);
+
+		assert_noop!(
+			OpenRollup::submit_batch(
+				user.clone(),
+				program_hash,
+				H256::from_low_u64_be(0),
+				H256::from_low_u64_be(1),
+				0,
+				vec![],
+				vec![1, 2, 3]
+			),
+			Error::<Test>::NotSubmitter
+		);
+	});
+}
+
+/// Unkown Zkapp
+#[test]
+fn called_on_unkowned_zkapp() {
+	new_test_ext().execute_with(|| {
+		let (_program_hash, owner, user) = setup_app(PROGRAM_HASH_64);
+		let unknow_program_hash = H256::from_low_u64_be(999);
+		let new_submitter = 5;
+
+		assert_noop!(
+			OpenRollup::add_asset_support(
+				owner.clone(),
+				unknow_program_hash,
+				Asset::Fungible(ASSET_ID)
+			),
+			Error::<Test>::NoProgram
+		);
+		assert_noop!(
+			OpenRollup::change_submitter(owner.clone(), unknow_program_hash, new_submitter),
+			Error::<Test>::NoProgram
+		);
+		assert_noop!(
+			OpenRollup::set_inactive(owner.clone(), unknow_program_hash),
+			Error::<Test>::NoProgram
+		);
+
+		let asset_fungible = AssetValue::Fungible(ASSET_ID, 10);
+		assert_noop!(
+			OpenRollup::deposit(user.clone(), unknow_program_hash, asset_fungible.clone()),
+			Error::<Test>::NoProgram
+		);
+
+		assert_noop!(
+			OpenRollup::withdraw(user.clone(), unknow_program_hash, AssetValue::Currency(10)),
+			Error::<Test>::NoProgram
+		);
+	});
+}
+
+/// Not supported assets
+#[test]
+fn called_on_not_supported_assets() {
+	new_test_ext().execute_with(|| {
+		let (program_hash, _owner, user) = setup_app(PROGRAM_HASH_64);
+		let asset_fungible = AssetValue::Fungible(ASSET_ID + 10, 10);
+		assert_noop!(
+			OpenRollup::deposit(user.clone(), program_hash, asset_fungible.clone()),
+			Error::<Test>::NotSupportAsset
+		);
+
+		assert_noop!(
+			OpenRollup::withdraw(user.clone(), program_hash, asset_fungible.clone()),
+			Error::<Test>::NotSupportAsset
+		);
+	});
+}
+
 /// Change a zkapp's submitter.
 #[test]
 fn change_submitter_should_work() {
@@ -126,6 +222,9 @@ fn change_submitter_should_work() {
 		assert_ok!(OpenRollup::change_submitter(owner, program_hash, new_submitter));
 		// check event
 		assert_last_event(Event::ChangeSubmitter(program_hash, new_submitter).into());
+		// check data
+		let zkapp = Zkapps::<Test>::try_get(program_hash).unwrap();
+		assert_eq!(zkapp.submitter, new_submitter);
 	});
 }
 
@@ -147,6 +246,9 @@ fn set_inactive_should_work() {
 			OpenRollup::change_submitter(owner.clone(), program_hash, 3),
 			Error::<Test>::Inactive
 		);
+		// check data
+		let zkapp = Zkapps::<Test>::try_get(program_hash).unwrap();
+		assert_eq!(zkapp.is_inactive, true);
 	});
 }
 
@@ -167,6 +269,16 @@ fn zkapp_deposit_should_work() {
 		assert_last_event(
 			Event::Deposited(program_hash, USER_ID, asset_nonfungible.clone()).into(),
 		);
+		// check data
+		let zkapp = Zkapps::<Test>::try_get(program_hash).unwrap();
+		assert_eq!(
+			zkapp.l1_operations.first().unwrap(),
+			&Operation::Deposit(USER_ID, asset_fungible.clone())
+		);
+		assert_eq!(
+			zkapp.l1_operations.last().unwrap(),
+			&Operation::Deposit(USER_ID, asset_nonfungible.clone())
+		);
 	});
 }
 
@@ -183,6 +295,12 @@ fn zkapp_withdraw_should_work() {
 		assert_ok!(OpenRollup::withdraw(user, program_hash, asset_value.clone()));
 		// check event
 		assert_last_event(Event::Withdrawed(program_hash, USER_ID, asset_value.clone()).into());
+		// check data
+		let zkapp = Zkapps::<Test>::try_get(program_hash).unwrap();
+		assert_eq!(
+			zkapp.l1_operations.first().unwrap(),
+			&Operation::Withdraw(USER_ID, asset_value.clone())
+		);
 	});
 }
 
@@ -207,6 +325,12 @@ fn zkapp_move_asset_should_work() {
 		assert_last_event(
 			Event::MoveAsset(program_hash_1, program_hash_2, USER_ID, asset_value.clone()).into(),
 		);
+		// check data
+		let zkapp = Zkapps::<Test>::try_get(program_hash_1).unwrap();
+		assert_eq!(
+			zkapp.l1_operations.first().unwrap(),
+			&Operation::Move(USER_ID, program_hash_2, asset_value.clone())
+		);
 	});
 }
 
@@ -217,8 +341,11 @@ fn zkapp_exit_should_work() {
 		let (program_hash, owner, user) = setup_app(PROGRAM_HASH_64);
 
 		// need add asset for user befor withdraw
-		let asset_value = AssetValue::Fungible(ASSET_ID, 10);
+		let asset_value = AssetValue::Currency(10);
 		OpenRollup::deposit(user.clone(), program_hash, asset_value.clone()).unwrap();
+
+		// check currency balance
+		assert_eq!(<Test as Config>::Currency::free_balance(&OpenRollup::account_id()), 10);
 
 		// set zkapp to inactive
 		OpenRollup::set_inactive(owner, program_hash).unwrap();
@@ -226,6 +353,9 @@ fn zkapp_exit_should_work() {
 		assert_ok!(OpenRollup::exit(user.clone(), program_hash));
 		// check event
 		assert_last_event(Event::Exit(program_hash, USER_ID).into());
+
+		// check currency balance
+		assert_eq!(<Test as Config>::Currency::free_balance(&OpenRollup::account_id()), 0);
 	});
 }
 
@@ -255,6 +385,9 @@ fn zkapp_submit_batch_should_work() {
 		OpenRollup::deposit(user.clone(), program_hash, asset_value_1.clone()).unwrap();
 		OpenRollup::deposit(user.clone(), program_hash, asset_value_2.clone()).unwrap();
 		OpenRollup::deposit(user.clone(), program_hash, asset_value_3.clone()).unwrap();
+
+		// check currency balance
+		assert_eq!(<Test as Config>::Currency::free_balance(&OpenRollup::account_id()), 10);
 
 		let operations = vec![
 			Operation::Deposit(USER_ID, asset_value_1),
