@@ -46,6 +46,7 @@ cargo doc --no-deps --open --package pallet-open-rollup
 
 ```bash
 git clone https://github.com/open-rollup/open-rollup-node
+git submodule update --init
 cargo run --release -- --dev
 ```
 
