@@ -12,7 +12,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-use super::Verifier;
+use super::*;
 use miden::{
 	math::Felt,
 	utils::{ByteReader, Deserializable, SliceReader},
@@ -29,34 +29,40 @@ impl Verifier for MidenVerifier {
 	///
 	/// The `old_state_root` as the public inputs.
 	/// The stack included in `outputs` include new_state_root, operations and l1_operations_pos.
-	fn vefify(
+	fn verify(
 		program_hash: &[u8],
 		old_state_root: &[u8],
 		proof: &[u8],
 		outputs: &[u8],
-	) -> Result<(), ()> {
+	) -> Result<(), VerifyError> {
 		// check program_hash is valid.
-		let program_hash = Digest::read_from_bytes(program_hash).map_err(|_| ())?;
+		let program_hash =
+			Digest::read_from_bytes(program_hash).map_err(|_| VerifyError::ParseError)?;
 		let program_info = ProgramInfo::new(program_hash, Kernel::default());
-		let proof = ExecutionProof::from_bytes(proof).map_err(|_| ())?;
+		let proof = ExecutionProof::from_bytes(proof).map_err(|_| VerifyError::ParseError)?;
 
 		// stack inputs deserialize from old_state_root
-		let miden_inputs = raw_inputs_to_stack_inputs(old_state_root).map_err(|_| ())?;
+		let miden_inputs = raw_inputs_to_stack_inputs(old_state_root)?;
 
 		// outputs deserialize.
 		let miden_outputs;
 		{
 			let mut outputs_reader = SliceReader::new(outputs);
-			let stack_len = outputs_reader.read_u32().map_err(|_| ())?;
+			let stack_len = outputs_reader.read_u32().map_err(|_| VerifyError::ParseError)?;
 			let mut stack = Vec::new();
 			for _ in 0..stack_len {
-				stack.push(Felt::new(outputs_reader.read_u64().map_err(|_| ())?))
+				stack.push(Felt::new(
+					outputs_reader.read_u64().map_err(|_| VerifyError::ParseError)?,
+				))
 			}
 
-			let overflow_addrs_lens = outputs_reader.read_u32().map_err(|_| ())?;
+			let overflow_addrs_lens =
+				outputs_reader.read_u32().map_err(|_| VerifyError::ParseError)?;
 			let mut overflow_addrs = Vec::new();
 			for _ in 0..overflow_addrs_lens {
-				overflow_addrs.push(Felt::new(outputs_reader.read_u64().map_err(|_| ())?))
+				overflow_addrs.push(Felt::new(
+					outputs_reader.read_u64().map_err(|_| VerifyError::ParseError)?,
+				))
 			}
 
 			miden_outputs = StackOutputs::from_elements(stack, overflow_addrs);
@@ -65,16 +71,17 @@ impl Verifier for MidenVerifier {
 		// println!("program_info: {:?}", program_info);
 		// println!("StackOutputs: {:?}", miden_outputs);
 
-		miden::verify(program_info, miden_inputs, miden_outputs, proof).map_err(|_| ())?;
+		miden::verify(program_info, miden_inputs, miden_outputs, proof)
+			.map_err(|_| VerifyError::VerifyError)?;
 
 		Ok(())
 	}
 }
 
 /// Convert bytes to Miden's `StackInputs`.
-fn raw_inputs_to_stack_inputs(raw_data: &[u8]) -> Result<StackInputs, ()> {
+fn raw_inputs_to_stack_inputs(raw_data: &[u8]) -> Result<StackInputs, VerifyError> {
 	if raw_data.len() != 32 {
-		return Err(())
+		return Err(VerifyError::ParseError)
 	}
 
 	let miden_inputs;
@@ -82,9 +89,9 @@ fn raw_inputs_to_stack_inputs(raw_data: &[u8]) -> Result<StackInputs, ()> {
 		let mut inputs_reader = SliceReader::new(raw_data);
 		let mut stack = Vec::new();
 		for _ in 0..4 {
-			stack.push(inputs_reader.read_u64().map_err(|_| ())?)
+			stack.push(inputs_reader.read_u64().map_err(|_| VerifyError::ParseError)?)
 		}
-		miden_inputs = StackInputs::try_from_values(stack).map_err(|_| ())?;
+		miden_inputs = StackInputs::try_from_values(stack).map_err(|_| VerifyError::ParseError)?;
 	}
 
 	Ok(miden_inputs)
@@ -114,7 +121,7 @@ mod tests {
 
 		assert_eq!(*outputs.stack().first().unwrap(), 8);
 		assert_eq!(
-			MidenVerifier::vefify(
+			MidenVerifier::verify(
 				&program.hash().as_bytes(),
 				old_state_root.as_bytes(),
 				&proof.to_bytes(),

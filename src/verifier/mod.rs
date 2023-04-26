@@ -12,18 +12,26 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
+/// Zk program proof verify errors
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum VerifyError {
+	ParseError,
+	VerifyError,
+}
+
+/// Zk program proof verifier trait
 pub trait Verifier {
 	/// Verify zk-program execution
 	/// As one zk-program, should use old_state_root as the public inputs,
 	/// user txs(L1_operations and L2 transactions) and state tree as secret inputs,
 	/// the outputs of the zk-program's execution should include new_state_root,
 	/// operations and l1_operations_pos (the number of the l1_operations included)
-	fn vefify(
+	fn verify(
 		program_hash: &[u8],
 		old_state_root: &[u8],
 		proof: &[u8],
 		outputs: &[u8],
-	) -> Result<(), ()>;
+	) -> Result<(), VerifyError>;
 }
 
 mod miden_verifier;
@@ -34,12 +42,12 @@ pub use miden_verifier::MidenVerifier;
 pub struct FakeVerifier;
 impl Verifier for FakeVerifier {
 	#[allow(unused_variables)]
-	fn vefify(
+	fn verify(
 		program_hash: &[u8],
 		proof: &[u8],
 		old_state_root: &[u8],
 		outputs: &[u8],
-	) -> Result<(), ()> {
+	) -> Result<(), VerifyError> {
 		Ok(())
 	}
 }

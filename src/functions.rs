@@ -73,7 +73,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	pub fn add_user_asset(
 		account: &mut AccountOf<T, I>,
 		asset_value: &AssetValueOf<T, I>,
-	) -> Result<(), ()> {
+	) -> Result<(), Error<T, I>> {
 		let dest_asset: AssetOf<T, I> = <AssetOf<T, I>>::from(asset_value.clone());
 		let mut has_asset = false;
 		for exist_asset_value in &mut account.assets {
@@ -94,7 +94,9 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 						if let AssetValue::Nonfungible(_, add_items) = asset_value {
 							for item_id in add_items {
 								if !items.contains(item_id) {
-									items.try_push(*item_id).map_err(|_| ())?;
+									items
+										.try_push(*item_id)
+										.map_err(|_| Error::<T, I>::InvalidAssets)?;
 								}
 							}
 						}
@@ -105,7 +107,10 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 			}
 		}
 		if !has_asset {
-			account.assets.try_push(asset_value.clone()).map_err(|_| ())?;
+			account
+				.assets
+				.try_push(asset_value.clone())
+				.map_err(|_| Error::<T, I>::InvalidAssets)?;
 		}
 
 		Ok(())
@@ -115,7 +120,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	pub fn reduce_user_asset(
 		account: &mut AccountOf<T, I>,
 		asset_value: &AssetValueOf<T, I>,
-	) -> Result<(), ()> {
+	) -> Result<(), Error<T, I>> {
 		let dest_asset: AssetOf<T, I> = <AssetOf<T, I>>::from(asset_value.clone());
 		let mut has_asset = false;
 		for exist_asset_value in &mut account.assets {
@@ -125,7 +130,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 					AssetValue::Currency(ref mut value) => {
 						if let AssetValue::Currency(reduce_value) = asset_value {
 							if reduce_value > value {
-								return Err(())
+								return Err(Error::<T, I>::InvalidAssets)
 							}
 							*value -= *reduce_value;
 						}
@@ -133,7 +138,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 					AssetValue::Fungible(_, ref mut value) => {
 						if let AssetValue::Fungible(_, reduce_value) = asset_value {
 							if reduce_value > value {
-								return Err(())
+								return Err(Error::<T, I>::InvalidAssets)
 							}
 							*value -= *reduce_value;
 						}
@@ -142,7 +147,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 						if let AssetValue::Nonfungible(_, reduce_items) = asset_value {
 							for item_id in reduce_items {
 								if !items.contains(item_id) {
-									return Err(())
+									return Err(Error::<T, I>::InvalidAssets)
 								}
 							}
 							items.retain(|item_id| !reduce_items.contains(item_id));
@@ -155,7 +160,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		}
 
 		if !has_asset {
-			return Err(())
+			return Err(Error::<T, I>::InvalidAssets)
 		}
 
 		Ok(())
@@ -208,7 +213,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		program_hash: ProgramHashOf<T, I>,
 		user: AccountIdOf<T>,
 		asset_value: &AssetValueOf<T, I>,
-	) -> Result<(), ()> {
+	) -> Result<(), Error<T, I>> {
 		let mut account: AccountOf<T, I>;
 		if let Ok(_account) = ZkappsAccounts::<T, I>::try_get(program_hash, user.clone()) {
 			account = _account;

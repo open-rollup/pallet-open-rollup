@@ -63,30 +63,30 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 	// Storage: OpenRollup Zkapps (r:1 w:1)
 	fn zkapp_register() -> Weight {
 		// Minimum execution time: 26_576 nanoseconds.
-		Weight::from_ref_time(27_203_000 as u64)
-			.saturating_add(T::DbWeight::get().reads(1 as u64))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
+		Weight::from_ref_time(27_203_000_u64)
+			.saturating_add(T::DbWeight::get().reads(1_u64))
+			.saturating_add(T::DbWeight::get().writes(1_u64))
 	}
 	// Storage: OpenRollup Zkapps (r:1 w:1)
 	fn add_asset_support() -> Weight {
 		// Minimum execution time: 39_073 nanoseconds.
-		Weight::from_ref_time(59_438_000 as u64)
-			.saturating_add(T::DbWeight::get().reads(1 as u64))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
+		Weight::from_ref_time(59_438_000_u64)
+			.saturating_add(T::DbWeight::get().reads(1_u64))
+			.saturating_add(T::DbWeight::get().writes(1_u64))
 	}
 	// Storage: OpenRollup Zkapps (r:1 w:1)
 	fn change_submitter() -> Weight {
 		// Minimum execution time: 23_980 nanoseconds.
-		Weight::from_ref_time(24_816_000 as u64)
-			.saturating_add(T::DbWeight::get().reads(1 as u64))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
+		Weight::from_ref_time(24_816_000_u64)
+			.saturating_add(T::DbWeight::get().reads(1_u64))
+			.saturating_add(T::DbWeight::get().writes(1_u64))
 	}
 	// Storage: OpenRollup Zkapps (r:1 w:1)
 	fn set_inactive() -> Weight {
 		// Minimum execution time: 24_124 nanoseconds.
-		Weight::from_ref_time(27_062_000 as u64)
-			.saturating_add(T::DbWeight::get().reads(1 as u64))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
+		Weight::from_ref_time(27_062_000_u64)
+			.saturating_add(T::DbWeight::get().reads(1_u64))
+			.saturating_add(T::DbWeight::get().writes(1_u64))
 	}
 	// Storage: OpenRollup Zkapps (r:1 w:1)
 	// Storage: Assets Asset (r:1 w:1)
@@ -94,25 +94,25 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 	// Storage: System Account (r:1 w:1)
 	fn deposit() -> Weight {
 		// Minimum execution time: 67_083 nanoseconds.
-		Weight::from_ref_time(68_999_000 as u64)
-			.saturating_add(T::DbWeight::get().reads(5 as u64))
-			.saturating_add(T::DbWeight::get().writes(5 as u64))
+		Weight::from_ref_time(68_999_000_u64)
+			.saturating_add(T::DbWeight::get().reads(5_u64))
+			.saturating_add(T::DbWeight::get().writes(5_u64))
 	}
 	// Storage: OpenRollup Zkapps (r:1 w:1)
 	// Storage: OpenRollup ZkappsAccounts (r:1 w:0)
 	fn withdraw() -> Weight {
 		// Minimum execution time: 29_619 nanoseconds.
-		Weight::from_ref_time(30_187_000 as u64)
-			.saturating_add(T::DbWeight::get().reads(2 as u64))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
+		Weight::from_ref_time(30_187_000_u64)
+			.saturating_add(T::DbWeight::get().reads(2_u64))
+			.saturating_add(T::DbWeight::get().writes(1_u64))
 	}
 	// Storage: OpenRollup Zkapps (r:2 w:1)
 	// Storage: OpenRollup ZkappsAccounts (r:1 w:0)
 	fn move_asset() -> Weight {
 		// Minimum execution time: 33_833 nanoseconds.
-		Weight::from_ref_time(37_397_000 as u64)
-			.saturating_add(T::DbWeight::get().reads(3 as u64))
-			.saturating_add(T::DbWeight::get().writes(1 as u64))
+		Weight::from_ref_time(37_397_000_u64)
+			.saturating_add(T::DbWeight::get().reads(3_u64))
+			.saturating_add(T::DbWeight::get().writes(1_u64))
 	}
 	// Storage: OpenRollup Zkapps (r:1 w:0)
 	// Storage: OpenRollup ZkappsExit (r:1 w:1)
@@ -122,9 +122,9 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 	// Storage: System Account (r:1 w:1)
 	fn exit() -> Weight {
 		// Minimum execution time: 69_844 nanoseconds.
-		Weight::from_ref_time(77_761_000 as u64)
-			.saturating_add(T::DbWeight::get().reads(7 as u64))
-			.saturating_add(T::DbWeight::get().writes(5 as u64))
+		Weight::from_ref_time(77_761_000_u64)
+			.saturating_add(T::DbWeight::get().reads(7_u64))
+			.saturating_add(T::DbWeight::get().writes(5_u64))
 	}
 	// Storage: OpenRollup Zkapps (r:1 w:1)
 	// Storage: OpenRollup ZkappsAccounts (r:2 w:2)
@@ -134,10 +134,10 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 	// Storage: Uniques ItemPriceOf (r:0 w:1)
 	fn submit_batch(ops_len: u32) -> Weight {
 		// Minimum execution time: 85_676 nanoseconds.
-		Weight::from_ref_time(87_229_000 as u64)
-            .saturating_add(Weight::from_ref_time(5_000_000 as u64).saturating_mul(ops_len as u64))
-			.saturating_add(T::DbWeight::get().reads(5 as u64))
-			.saturating_add(T::DbWeight::get().writes(7 as u64))
+		Weight::from_ref_time(87_229_000_u64)
+            .saturating_add(Weight::from_ref_time(5_000_000_u64).saturating_mul(ops_len as u64))
+			.saturating_add(T::DbWeight::get().reads(5_u64))
+			.saturating_add(T::DbWeight::get().writes(7_u64))
 	}
 }
 
@@ -146,30 +146,30 @@ impl WeightInfo for () {
 	// Storage: OpenRollup Zkapps (r:1 w:1)
 	fn zkapp_register() -> Weight {
 		// Minimum execution time: 26_576 nanoseconds.
-		Weight::from_ref_time(27_203_000 as u64)
-			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+		Weight::from_ref_time(27_203_000_u64)
+			.saturating_add(RocksDbWeight::get().reads(1_u64))
+			.saturating_add(RocksDbWeight::get().writes(1_u64))
 	}
 	// Storage: OpenRollup Zkapps (r:1 w:1)
 	fn add_asset_support() -> Weight {
 		// Minimum execution time: 39_073 nanoseconds.
-		Weight::from_ref_time(59_438_000 as u64)
-			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+		Weight::from_ref_time(59_438_000_u64)
+			.saturating_add(RocksDbWeight::get().reads(1_u64))
+			.saturating_add(RocksDbWeight::get().writes(1_u64))
 	}
 	// Storage: OpenRollup Zkapps (r:1 w:1)
 	fn change_submitter() -> Weight {
 		// Minimum execution time: 23_980 nanoseconds.
-		Weight::from_ref_time(24_816_000 as u64)
-			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+		Weight::from_ref_time(24_816_000_u64)
+			.saturating_add(RocksDbWeight::get().reads(1_u64))
+			.saturating_add(RocksDbWeight::get().writes(1_u64))
 	}
 	// Storage: OpenRollup Zkapps (r:1 w:1)
 	fn set_inactive() -> Weight {
 		// Minimum execution time: 24_124 nanoseconds.
-		Weight::from_ref_time(27_062_000 as u64)
-			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+		Weight::from_ref_time(27_062_000_u64)
+			.saturating_add(RocksDbWeight::get().reads(1_u64))
+			.saturating_add(RocksDbWeight::get().writes(1_u64))
 	}
 	// Storage: OpenRollup Zkapps (r:1 w:1)
 	// Storage: Assets Asset (r:1 w:1)
@@ -177,25 +177,25 @@ impl WeightInfo for () {
 	// Storage: System Account (r:1 w:1)
 	fn deposit() -> Weight {
 		// Minimum execution time: 67_083 nanoseconds.
-		Weight::from_ref_time(68_999_000 as u64)
-			.saturating_add(RocksDbWeight::get().reads(5 as u64))
-			.saturating_add(RocksDbWeight::get().writes(5 as u64))
+		Weight::from_ref_time(68_999_000_u64)
+			.saturating_add(RocksDbWeight::get().reads(5_u64))
+			.saturating_add(RocksDbWeight::get().writes(5_u64))
 	}
 	// Storage: OpenRollup Zkapps (r:1 w:1)
 	// Storage: OpenRollup ZkappsAccounts (r:1 w:0)
 	fn withdraw() -> Weight {
 		// Minimum execution time: 29_619 nanoseconds.
-		Weight::from_ref_time(30_187_000 as u64)
-			.saturating_add(RocksDbWeight::get().reads(2 as u64))
-			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+		Weight::from_ref_time(30_187_000_u64)
+			.saturating_add(RocksDbWeight::get().reads(2_u64))
+			.saturating_add(RocksDbWeight::get().writes(1_u64))
 	}
 	// Storage: OpenRollup Zkapps (r:2 w:1)
 	// Storage: OpenRollup ZkappsAccounts (r:1 w:0)
 	fn move_asset() -> Weight {
 		// Minimum execution time: 33_833 nanoseconds.
-		Weight::from_ref_time(37_397_000 as u64)
-			.saturating_add(RocksDbWeight::get().reads(3 as u64))
-			.saturating_add(RocksDbWeight::get().writes(1 as u64))
+		Weight::from_ref_time(37_397_000_u64)
+			.saturating_add(RocksDbWeight::get().reads(3_u64))
+			.saturating_add(RocksDbWeight::get().writes(1_u64))
 	}
 	// Storage: OpenRollup Zkapps (r:1 w:0)
 	// Storage: OpenRollup ZkappsExit (r:1 w:1)
@@ -205,9 +205,9 @@ impl WeightInfo for () {
 	// Storage: System Account (r:1 w:1)
 	fn exit() -> Weight {
 		// Minimum execution time: 69_844 nanoseconds.
-		Weight::from_ref_time(77_761_000 as u64)
-			.saturating_add(RocksDbWeight::get().reads(7 as u64))
-			.saturating_add(RocksDbWeight::get().writes(5 as u64))
+		Weight::from_ref_time(77_761_000_u64)
+			.saturating_add(RocksDbWeight::get().reads(7_u64))
+			.saturating_add(RocksDbWeight::get().writes(5_u64))
 	}
 	// Storage: OpenRollup Zkapps (r:1 w:1)
 	// Storage: OpenRollup ZkappsAccounts (r:2 w:2)
@@ -217,9 +217,9 @@ impl WeightInfo for () {
 	// Storage: Uniques ItemPriceOf (r:0 w:1)
 	fn submit_batch(ops_len: u32) -> Weight {
 		// Minimum execution time: 85_676 nanoseconds.
-		Weight::from_ref_time(87_229_000 as u64)
-            .saturating_add(Weight::from_ref_time(5_000_000 as u64).saturating_mul(ops_len as u64))
-			.saturating_add(RocksDbWeight::get().reads(5 as u64))
-			.saturating_add(RocksDbWeight::get().writes(7 as u64))
+		Weight::from_ref_time(87_229_000_u64)
+            .saturating_add(Weight::from_ref_time(5_000_000_u64).saturating_mul(ops_len as u64))
+			.saturating_add(RocksDbWeight::get().reads(5_u64))
+			.saturating_add(RocksDbWeight::get().writes(7_u64))
 	}
 }

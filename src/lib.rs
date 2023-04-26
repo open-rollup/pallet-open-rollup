@@ -662,7 +662,7 @@ pub mod pallet {
 
 			// println!("{:?}, {:?}, {:?}", l1_operations_pos, operations, zkapp.l1_operations);
 
-			// vefify the zk proof
+			// verify the zk proof
 			let zk_inputs = old_state_root.as_ref();
 			let zk_outputs = ProofOutput {
 				operations: operations.clone(),
@@ -674,11 +674,11 @@ pub mod pallet {
 
 			match zkapp.zkvm_type {
 				ZkvmType::Fake => {
-					FakeVerifier::vefify(program_hash.as_ref(), zk_inputs, &zk_proof, zk_outputs)
+					FakeVerifier::verify(program_hash.as_ref(), zk_inputs, &zk_proof, zk_outputs)
 						.map_err(|_| Error::<T, I>::InvalidProof)?;
 				},
 				ZkvmType::Miden => {
-					MidenVerifier::vefify(program_hash.as_ref(), zk_inputs, &zk_proof, zk_outputs)
+					MidenVerifier::verify(program_hash.as_ref(), zk_inputs, &zk_proof, zk_outputs)
 						.map_err(|_| Error::<T, I>::InvalidProof)?;
 				},
 			};
@@ -701,24 +701,21 @@ pub mod pallet {
 						} else {
 							account = Account { user: user.clone(), assets: Default::default() };
 						}
-						Self::add_user_asset(&mut account, asset_value)
-							.map_err(|_| Error::<T, I>::InvalidAssets)?;
+						Self::add_user_asset(&mut account, asset_value)?;
 						ZkappsAccounts::<T, I>::insert(program_hash, user, account);
 					},
 					Operation::Withdraw(user, asset_value) => {
 						let mut account = ZkappsAccounts::<T, I>::try_get(program_hash, user)
 							.map_err(|_| Error::<T, I>::NoAccount)?;
 						Self::user_withdraw(user.clone(), asset_value.clone())?;
-						Self::reduce_user_asset(&mut account, asset_value)
-							.map_err(|_| Error::<T, I>::InvalidAssets)?;
+						Self::reduce_user_asset(&mut account, asset_value)?;
 						ZkappsAccounts::<T, I>::insert(program_hash, user, account);
 					},
 					Operation::Move(user, to_program_hash, asset_value) => {
 						// reduce user asset_value
 						let mut account = ZkappsAccounts::<T, I>::try_get(program_hash, user)
 							.map_err(|_| Error::<T, I>::NoAccount)?;
-						Self::reduce_user_asset(&mut account, asset_value)
-							.map_err(|_| Error::<T, I>::InvalidAssets)?;
+						Self::reduce_user_asset(&mut account, asset_value)?;
 						ZkappsAccounts::<T, I>::insert(program_hash, user, account);
 
 						// add deposit L1 operation and deposit event to to_program
@@ -748,31 +745,25 @@ pub mod pallet {
 							to_account =
 								Account { user: to_user.clone(), assets: Default::default() };
 						}
-						Self::reduce_user_asset(&mut from_account, asset_value)
-							.map_err(|_| Error::<T, I>::InvalidAssets)?;
+						Self::reduce_user_asset(&mut from_account, asset_value)?;
 						ZkappsAccounts::<T, I>::insert(program_hash, from_user, from_account);
 
-						Self::add_user_asset(&mut to_account, asset_value)
-							.map_err(|_| Error::<T, I>::InvalidAssets)?;
+						Self::add_user_asset(&mut to_account, asset_value)?;
 						ZkappsAccounts::<T, I>::insert(program_hash, to_user, to_account);
 					},
 					Operation::Swap(user_1, asset_value_1, user_2, asset_value_2) => {
 						// modify user_1 assets
 						let mut account_1 = ZkappsAccounts::<T, I>::try_get(program_hash, user_1)
 							.map_err(|_| Error::<T, I>::NoAccount)?;
-						Self::reduce_user_asset(&mut account_1, asset_value_1)
-							.map_err(|_| Error::<T, I>::InvalidAssets)?;
-						Self::add_user_asset(&mut account_1, asset_value_2)
-							.map_err(|_| Error::<T, I>::InvalidAssets)?;
+						Self::reduce_user_asset(&mut account_1, asset_value_1)?;
+						Self::add_user_asset(&mut account_1, asset_value_2)?;
 						ZkappsAccounts::<T, I>::insert(program_hash, user_1, account_1);
 
 						// modify user_2 assets
 						let mut account_2 = ZkappsAccounts::<T, I>::try_get(program_hash, user_2)
 							.map_err(|_| Error::<T, I>::NoAccount)?;
-						Self::reduce_user_asset(&mut account_2, asset_value_2)
-							.map_err(|_| Error::<T, I>::InvalidAssets)?;
-						Self::add_user_asset(&mut account_2, asset_value_1)
-							.map_err(|_| Error::<T, I>::InvalidAssets)?;
+						Self::reduce_user_asset(&mut account_2, asset_value_2)?;
+						Self::add_user_asset(&mut account_2, asset_value_1)?;
 						ZkappsAccounts::<T, I>::insert(program_hash, user_2, account_2);
 					},
 				}
