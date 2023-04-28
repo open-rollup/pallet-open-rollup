@@ -44,8 +44,11 @@ cargo doc --no-deps --open --package pallet-open-rollup
 
 ## Run a Substrate node with Open Rollup pallet
 
+First, install the required compiler and tools: https://docs.substrate.io/install/
+
 ```bash
 git clone https://github.com/open-rollup/open-rollup-node
+cd open-rollup-node
 git submodule update --init
 cargo run --release -- --dev
 ```
