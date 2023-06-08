@@ -27,7 +27,7 @@ pub mod weights;
 mod fix_nonfungible;
 mod functions;
 mod types;
-mod verifier;
+pub mod verifier;
 
 use fix_nonfungible::Transfer as NonfungibleTransfer;
 use frame_support::{
