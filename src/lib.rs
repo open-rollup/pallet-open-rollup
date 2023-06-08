@@ -628,6 +628,7 @@ pub mod pallet {
 		/// Emits `SubmitBatch` event when successful.
 		///
 		/// Weight: `O(operations.len())`
+        #[allow(clippy::too_many_arguments)]
 		#[pallet::weight(T::WeightInfo::submit_batch(operations.len() as u32))]
 		pub fn submit_batch(
 			origin: OriginFor<T>,
@@ -637,6 +638,7 @@ pub mod pallet {
 			l1_operations_pos: u32,
 			operations: Vec<OperationOf<T, I>>,
 			zk_proof: Vec<u8>,
+            zk_outputs: Option<Vec<u8>>,
 		) -> DispatchResult {
 			let submitter = ensure_signed(origin)?;
 			let mut zkapp =
@@ -664,13 +666,17 @@ pub mod pallet {
 
 			// verify the zk proof
 			let zk_inputs = old_state_root.as_ref();
-			let zk_outputs = ProofOutput {
-				operations: operations.clone(),
-				state_root: new_state_root,
-				l1_operations_pos,
-			}
-			.encode();
+            let zk_outputs = match zk_outputs {
+                Some(outs) => outs,
+                None => ProofOutput {
+                    operations: operations.clone(),
+                    state_root: new_state_root,
+                    l1_operations_pos,
+                }.encode()
+            };
 			let zk_outputs = zk_outputs.as_ref();
+
+            // println!("pallet zk_outputs: {:?}", zk_outputs);
 
 			match zkapp.zkvm_type {
 				ZkvmType::Fake => {

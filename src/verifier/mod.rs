@@ -36,7 +36,7 @@ pub trait Verifier {
 
 mod miden_verifier;
 
-pub use miden_verifier::MidenVerifier;
+pub use miden_verifier::{ MidenVerifier, raw_inputs_to_stack_inputs };
 
 /// One Fake verifier for testing.
 pub struct FakeVerifier;

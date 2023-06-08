@@ -35,6 +35,9 @@ impl Verifier for MidenVerifier {
 		proof: &[u8],
 		outputs: &[u8],
 	) -> Result<(), VerifyError> {
+
+        // println!("MidenVerifier: \n{:?}\n{:?}\n{:?}\n{:?}\n", program_hash, old_state_root, outputs, proof.len());
+
 		// check program_hash is valid.
 		let program_hash =
 			Digest::read_from_bytes(program_hash).map_err(|_| VerifyError::ParseError)?;
@@ -79,7 +82,7 @@ impl Verifier for MidenVerifier {
 }
 
 /// Convert bytes to Miden's `StackInputs`.
-fn raw_inputs_to_stack_inputs(raw_data: &[u8]) -> Result<StackInputs, VerifyError> {
+pub fn raw_inputs_to_stack_inputs(raw_data: &[u8]) -> Result<StackInputs, VerifyError> {
 	if raw_data.len() != 32 {
 		return Err(VerifyError::ParseError)
 	}
@@ -112,6 +115,8 @@ mod tests {
 		let old_state_root = H256::repeat_byte(1);
 
 		let inputs = raw_inputs_to_stack_inputs(old_state_root.as_bytes()).unwrap();
+
+        // println!("miden verifier inputs: {:?}", inputs);
 
 		let (outputs, proof) =
 			prove(&program, inputs, MemAdviceProvider::default(), ProofOptions::default()).unwrap();

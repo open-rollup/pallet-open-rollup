@@ -261,7 +261,7 @@ benchmarks_instance_pallet! {
 			Operation::Withdraw(user_2.clone(), asset_value_3.clone()),
 		];
 
-	}: _(SystemOrigin::Signed(caller.clone()), Default::default(), old_state_root, new_state_root, 3, operations.clone(), zk_proof)
+	}: _(SystemOrigin::Signed(caller.clone()), Default::default(), old_state_root, new_state_root, 3, operations.clone(), zk_proof, None)
 	verify {
 		// Check SubmitBatch event.
 		assert_last_event::<T, I>(Event::SubmitBatch(Default::default(), old_state_root, new_state_root, operations).into());

@@ -19,6 +19,9 @@ use crate::mock::*;
 use frame_support::{assert_noop, assert_ok, bounded_vec};
 use sp_runtime::testing::H256;
 
+use miden::{ prove, Assembler, MemAdviceProvider, ProofOptions, Program, utils::Serializable };
+use verifier::raw_inputs_to_stack_inputs;
+
 const OWNER_ID: u64 = 1;
 const SUBMITTER_ID: u64 = 2;
 const USER_ID: u64 = 3;
@@ -31,6 +34,37 @@ type RuntimeEvent = <Test as Config>::RuntimeEvent;
 /// Check last event.
 fn assert_last_event(event: RuntimeEvent) {
 	frame_system::Pallet::<Test>::assert_last_event(event);
+}
+
+/// Setup a miden zkapp
+fn setup_miden_app(empty_state_root: H256) -> (Program, RuntimeOrigin, RuntimeOrigin) {
+    let miden_source = "begin push.3 push.5 add end";
+
+    let assembler = Assembler::default();
+    let program = assembler.compile(miden_source).unwrap();
+    let program_hash = H256::from_slice(&program.hash().as_bytes());
+
+	let owner = RuntimeOrigin::signed(OWNER_ID);
+
+	let user = RuntimeOrigin::signed(USER_ID);
+
+	OpenRollup::zkapp_register(
+		owner.clone(),
+		program_hash,
+		ZkvmType::Miden,
+		SUBMITTER_ID,
+		empty_state_root,
+	)
+	.unwrap();
+	// check event
+	assert_last_event(Event::ZkappRegister(ZkvmType::Miden, program_hash).into());
+
+	// check zkapp data
+	let zkapp = Zkapps::<Test>::try_get(program_hash).unwrap();
+	assert_eq!(zkapp.owner, OWNER_ID);
+	assert_eq!(zkapp.state_root, empty_state_root);
+
+	(program, owner, user)
 }
 
 /// Setup a zkapp, add fungible and nonfungible assets supports.
@@ -150,7 +184,8 @@ fn called_by_not_submitter() {
 				H256::from_low_u64_be(1),
 				0,
 				vec![],
-				vec![1, 2, 3]
+				vec![1, 2, 3],
+                None,
 			),
 			Error::<Test>::NotSubmitter
 		);
@@ -410,6 +445,7 @@ fn zkapp_submit_batch_should_work() {
 			l1_operations_pos,
 			operations.clone(),
 			zk_proof,
+            None,
 		));
 
 		// check event
@@ -427,5 +463,53 @@ fn zkapp_submit_batch_should_work() {
 			account.assets.last().unwrap(),
 			&AssetValue::Nonfungible(COLLECTION_ID, bounded_vec![4])
 		);
+	});
+}
+
+// submit a miden project batch
+#[test]
+fn zkapp_miden_submit_batch_should_work() {
+	new_test_ext().execute_with(|| {
+		// state_root
+		let old_state_root = H256::repeat_byte(1);
+		let new_state_root = H256::repeat_byte(2);
+
+		let (program, _owner, _user) = setup_miden_app(old_state_root);
+
+        let program_hash = H256::from_slice(&program.hash().as_bytes());
+
+		let inputs = raw_inputs_to_stack_inputs(old_state_root.as_bytes()).unwrap();
+
+        // println!("miden inputs: {:?}", inputs);
+
+		let (outputs, proof) =
+			prove(&program, inputs, MemAdviceProvider::default(), ProofOptions::default()).unwrap();
+		assert_eq!(*outputs.stack().first().unwrap(), 8);
+        
+        // println!("miden outputs: {:?}", outputs);
+
+		// zk proof
+		let zk_proof = proof.to_bytes();
+        let zk_outputs = Some(outputs.to_bytes());
+
+		let l1_operations_pos = 0;
+		let operations = vec![ ];
+		// submit_batch
+		assert_ok!(OpenRollup::submit_batch(
+			RuntimeOrigin::signed(SUBMITTER_ID),
+			program_hash,
+			old_state_root,
+			new_state_root,
+			l1_operations_pos,
+			operations.clone(),
+			zk_proof,
+            zk_outputs,
+		));
+
+		// check event
+		assert_last_event(
+			Event::SubmitBatch(program_hash, old_state_root, new_state_root, operations).into(),
+		);
+
 	});
 }
