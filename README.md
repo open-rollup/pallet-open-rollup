@@ -42,16 +42,9 @@ The in-code documentation can be opened with:
 cargo doc --no-deps --open --package pallet-open-rollup
 ```
 
-## Run a Substrate node with Open Rollup pallet
+## A demo off-chain miden program of computing Fibonacci sequence.
 
 First, install the required compiler and tools: https://docs.substrate.io/install/
 
-```bash
-git clone https://github.com/open-rollup/open-rollup-node
-cd open-rollup-node
-git submodule update --init
-cargo run --release -- --dev
-```
-
-Then can use [substrate-front-end-template](https://github.com/substrate-developer-hub/substrate-front-end-template) to try out the pallet.
+Then use [https://github.com/open-rollup/fib-miden-example](https://github.com/open-rollup/fib-miden-example) to try out the pallet.
 
