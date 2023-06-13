@@ -29,7 +29,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 
 		match asset_value {
 			AssetValue::Currency(value) => {
-				T::Currency::transfer(&user, &account_id, value, ExistenceRequirement::KeepAlive)?;
+				T::Currency::transfer(&user, &account_id, value, ExistenceRequirement::AllowDeath)?;
 			},
 			AssetValue::Fungible(asset_id, value) => {
 				T::Fungibles::transfer(asset_id, &user, &account_id, value, false)?;
@@ -52,7 +52,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 
 		match asset_value {
 			AssetValue::Currency(value) => {
-				T::Currency::transfer(&account_id, &user, value, ExistenceRequirement::KeepAlive)?;
+				T::Currency::transfer(&account_id, &user, value, ExistenceRequirement::AllowDeath)?;
 			},
 			AssetValue::Fungible(asset_id, value) => {
 				T::Fungibles::transfer(asset_id, &account_id, &user, value, false)?;
