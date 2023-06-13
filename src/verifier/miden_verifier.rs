@@ -36,7 +36,10 @@ impl Verifier for MidenVerifier {
 		outputs: &[u8],
 	) -> Result<(), VerifyError> {
 
-        // println!("MidenVerifier: \n{:?}\n{:?}\n{:?}\n{:?}\n", program_hash, old_state_root, outputs, proof.len());
+        log::info!("MidenVerifier: \n{:?}\n{:?}\n{:?}\n{:?}\n", program_hash, old_state_root, outputs.len(), proof.len());
+        log::info!("outputs: {:?}", outputs);
+        log::info!("proof start: {:?}", &proof[..10]);
+        log::info!("proof end: {:?}", &proof[proof.len()-10..]);
 
 		// check program_hash is valid.
 		let program_hash =
@@ -74,8 +77,10 @@ impl Verifier for MidenVerifier {
 		// println!("program_info: {:?}", program_info);
 		// println!("StackOutputs: {:?}", miden_outputs);
 
-		miden::verify(program_info, miden_inputs, miden_outputs, proof)
-			.map_err(|_| VerifyError::VerifyError)?;
+		let verify_result = miden::verify(program_info, miden_inputs, miden_outputs, proof);
+        log::info!("verify_result: {:?}", verify_result);
+
+        verify_result.map_err(|_| VerifyError::VerifyError)?;
 
 		Ok(())
 	}

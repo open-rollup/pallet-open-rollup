@@ -30,6 +30,8 @@ miden-vm = { default-features = false, git = "https://github.com/open-rollup/mid
 # ???? why need this? how to fix??
 pallet-uniques = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.31" }
 
+log = "0.4"
+
 [dev-dependencies]
 sp-core = { version = "6.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.31" }
 sp-std = { version = "4.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.31" }
